@@ -41,4 +41,8 @@ public class FacultyController {
         return facultyService.filterByColor(color);
     }
 
+    @GetMapping("byNameOrColor")
+    public List<Faculty> findByColorOrNameIgnoreCase(String name, String color) {
+        return facultyService.findByColorOrNameIgnoreCase(name, color);
+    }
 }
