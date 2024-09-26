@@ -1,6 +1,8 @@
 package ru.hogwarts.school.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.model.Avatar;
@@ -12,8 +14,8 @@ import ru.hogwarts.school.service.AvatarService;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
-import static io.swagger.v3.core.util.AnnotationsUtils.getExtensions;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 @Service
@@ -23,7 +25,7 @@ public class AvatarServiceImpl implements AvatarService {
     private final int BUFFER_SIZE = 1024;
 
     private final StudentRepository studentRepository;
-    private AvatarRepository avatarRepository;
+    private final AvatarRepository avatarRepository;
 
     public AvatarServiceImpl(StudentRepository studentRepository, AvatarRepository avatarRepository) {
         this.studentRepository = studentRepository;
@@ -47,6 +49,11 @@ public class AvatarServiceImpl implements AvatarService {
         );
     }
 
+    @Override
+    public Page<Avatar> getAllAvatars(Pageable pageable) {
+        return avatarRepository.findAll(pageable);
+    }
+
     private String getExtensions(String fileName) {
         return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
@@ -68,7 +75,11 @@ public class AvatarServiceImpl implements AvatarService {
     }
 
     private Avatar saveToDb(Student student, Path avatarPath, MultipartFile avatarFile) throws IOException {
-        Avatar avatar = getAvatarByStudent(student);
+        Avatar avatar = getAvatarByStudent(student).orElseGet(() -> {
+            Avatar newAvatar = new Avatar();
+            newAvatar.setStudent(student);
+            return newAvatar;
+        });
         avatar.setFilePath(avatarPath.toString());
         avatar.setFileSize(avatarFile.getSize());
         avatar.setMediaType(avatarFile.getContentType());
@@ -76,11 +87,19 @@ public class AvatarServiceImpl implements AvatarService {
         return avatarRepository.save(avatar);
     }
 
-    private Avatar getAvatarByStudent(Student student) {
-        return avatarRepository.findByStudent(student).orElseGet(() -> {
-            Avatar avatar = new Avatar();
-            avatar.setStudent(student);
-            return avatar;
-        });
+    @Override
+    public Optional<Avatar> getAvatarByStudent(Student student) {
+        return avatarRepository.findByStudent(student);
+    }
+
+    @Override
+    public Optional<Avatar> getAvatarById(Long id) {
+        return avatarRepository.findById(id);
+    }
+
+    @Override
+    public void deleteAvatar(Avatar avatar) {
+        avatarRepository.delete(avatar);
+
     }
 }

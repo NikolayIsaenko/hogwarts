@@ -19,4 +19,8 @@ public interface StudentService {
     List<Student> findAllByAgeBetween(int fromAge, int toAge);
 
     Faculty getFacultyStudent(Long studentId);
+    List<Student> findTop5Students();
+    Double getAverageAgeOfStudents();
+    long countAllStudents();
+
 }
