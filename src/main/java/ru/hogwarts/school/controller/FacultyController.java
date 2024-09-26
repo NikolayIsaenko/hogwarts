@@ -38,7 +38,7 @@ public class FacultyController {
     }
 
     @GetMapping
-    public List<Faculty> filterByAge(@RequestParam String color) {
+    public List<Faculty> filterByColor(@RequestParam String color) {
         return facultyService.filterByColor(color);
     }
 
