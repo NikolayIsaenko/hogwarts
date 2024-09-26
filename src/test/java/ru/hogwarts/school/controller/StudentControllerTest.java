@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class StudentControllerTest {
@@ -41,12 +43,14 @@ public class StudentControllerTest {
     private final Faker faker = new Faker();
     private Student student1;
     private Student student2;
+    private List<Student> students;
 
     @AfterEach
     public void cleanup() {
         studentRepository.deleteAll();
         facultyRepository.deleteAll();
     }
+
     @BeforeEach
     public void beforeEach() {
         Faculty faculty1 = createFaculty();
@@ -54,6 +58,7 @@ public class StudentControllerTest {
 
         student1 = createStudent(faculty1);
         student2 = createStudent(faculty2);
+        students = Arrays.asList(student1, student2);
     }
 
 
@@ -76,8 +81,14 @@ public class StudentControllerTest {
         return studentRepository.save(student);
     }
 
+    @Test
+    public void createStudentTest() {
 
-    private void createStudentTest(Student student) {
+        Student student = new Student();
+        student.setAge(faker.random().nextInt(13, 19));
+        student.setName(faker.harryPotter().character());
+
+
         ResponseEntity<Student> responseEntity = testRestTemplate.postForEntity(
                 buildUrl("/students"),
                 student,
@@ -107,7 +118,7 @@ public class StudentControllerTest {
         student.setAge(faker.random().nextInt(13, 19));
         student.setName(faker.harryPotter().character());
 
-        createStudentTest(student);
+        createStudentTest();
     }
 
     @Test
@@ -118,7 +129,7 @@ public class StudentControllerTest {
 
         Faculty facultyTest = createFaculty();
         student.setFaculty(facultyTest);
-        createStudentTest(student);
+        createStudentTest();
     }
 
     private void assertStudentEquals(Student expected, Student actual) {
@@ -176,6 +187,7 @@ public class StudentControllerTest {
                 Student.class
         );
     }
+
     @Test
     public void testDeleteStudent() {
         ResponseEntity<Student> responseEntity = testRestTemplate.exchange(
@@ -194,6 +206,7 @@ public class StudentControllerTest {
 
         assertThat(fromDb).isNotPresent();
     }
+
     @Test
     public void testFilterByAge() {
         ResponseEntity<Student[]> responseEntity = testRestTemplate.getForEntity(
@@ -207,6 +220,7 @@ public class StudentControllerTest {
         assertThat(students).isNotNull();
         assertThat(students).contains(student1);
     }
+
     @Test
     public void testFindAllByAgeBetween() {
         int fromAge = 13;
@@ -223,6 +237,7 @@ public class StudentControllerTest {
         assertThat(students).isNotNull();
         assertThat(students).contains(student1, student2);
     }
+
     @Test
     public void testGetFacultyStudent() {
         ResponseEntity<Faculty> responseEntity = testRestTemplate.getForEntity(
@@ -235,5 +250,49 @@ public class StudentControllerTest {
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(faculty).isNotNull();
         assertThat(faculty.getId()).isEqualTo(student1.getFaculty().getId());
+    }
+
+    @Test
+    public void testCountAllStudents() {
+        ResponseEntity<Long> response = testRestTemplate.getForEntity
+                ("http://localhost:" + port + "/students/count", Long.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(2L);
+    }
+
+    @Test
+    public void testGetAverageAgeOfStudents() {
+        double expectedAverageAge = (student1.getAge() + student2.getAge()) / 2.0;
+
+        ResponseEntity<Double> response = testRestTemplate.getForEntity(
+                buildUrl("/students/averageAge"),
+                Double.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(expectedAverageAge);
+    }
+
+    @Test
+    public void testFindTop5Students() {
+
+        ResponseEntity<List<Student>> response = testRestTemplate.exchange(
+                "http://localhost:" + port + "/students/top5",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Student>>() {
+                }
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody())
+                .isNotNull()
+                .hasSize(students.size())
+                .extracting(Student::getId, Student::getName, Student::getAge)
+                .containsExactlyInAnyOrder(
+                        tuple(students.get(0).getId(), students.get(0).getName(), students.get(0).getAge()),
+                        tuple(students.get(1).getId(), students.get(1).getName(), students.get(1).getAge())
+                );
     }
 }
