@@ -22,8 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = StudentController.class)
 public class StudentsMvcTest {
@@ -184,6 +183,42 @@ public class StudentsMvcTest {
                 .andExpect(jsonPath("$.name").value(faculty.getName()))
                 .andExpect(jsonPath("$.color").value(faculty.getColor()))
                 .andDo(print());
+    }
+
+    @Test
+    public void testGetNamesStartingWithA() throws Exception {
+        // Arrange
+        List<Student> students = Arrays.asList(
+                new Student(1L, "Alice", 20),
+                new Student(2L, "Bob", 22),
+                new Student(3L, "Anna", 21),
+                new Student(4L, "Alex", 23)
+        );
+
+        when(studentService.findAll()).thenReturn(students);
+
+        // Act & Assert
+        mockMvc.perform(get("/students/namesStartingWithA"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[\"ALICE\", \"ANNA\", \"ALEX\"]"));
+    }
+
+    @Test
+    public void testGetAverageAgeOfAllStudents() throws Exception {
+        // Arrange
+        List<Student> students = Arrays.asList(
+                new Student(1L, "Alice", 20),
+                new Student(2L, "Bob", 22),
+                new Student(3L, "Anna", 21),
+                new Student(4L, "Alex", 23)
+        );
+
+        when(studentService.findAll()).thenReturn(students);
+
+        // Act & Assert
+        mockMvc.perform(get("/students/averageAllAge"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("21.5"));
     }
 }
 

@@ -52,6 +52,12 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public List<Student> findAll() {
+        logger.info("Вызван метод для получения всех студентов");
+        return studentRepository.findAll();
+    }
+
+    @Override
     public List<Student> filterByAge(int age) {
         logger.info("Метод, для фильтрации студента по возрасту");
         return studentRepository.findAllByAge(age);

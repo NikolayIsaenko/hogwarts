@@ -3,13 +3,13 @@ package ru.hogwarts.school.controller;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -22,8 +22,7 @@ import ru.hogwarts.school.service.FacultyService;
 import java.util.Arrays;
 import java.util.List;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = FacultyController.class)
 public class FacultyMvcTest {
 
     @Autowired
@@ -166,5 +165,22 @@ public class FacultyMvcTest {
                 .andExpect(jsonPath("$[1].id").value(2L))
                 .andExpect(jsonPath("$[1].name").value("Student 2"))
                 .andDo(print());
+    }
+    @Test
+    public void testGetLongestFacultyName() throws Exception {
+        // Arrange
+        List<Faculty> faculties = Arrays.asList(
+                createFaculty(1L, "Griffindor", "red"),
+                createFaculty(2L, "Slytherin", "green"),
+                createFaculty(3L, "Hufflepuff", "yellow"),
+                createFaculty(4L, "Ravenclaw", "blue")
+        );
+
+        when(facultyService.findAll()).thenReturn(faculties);
+
+        // Act & Assert
+        mockMvc.perform(get("/faculties/longestName"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Griffindor"));
     }
 }

@@ -71,4 +71,11 @@ public class FacultyServiceImpl implements FacultyService {
         logger.info("Вызван метод для получения студентов факультета с id: {}", facultyId);
         return facultyRepository.findById(facultyId).map(Faculty::getStudents).orElse(null);
     }
+
+    @Override
+    public List<Faculty> findAll() {
+        logger.info("Вызван метод для получения всех факультетов");
+        return facultyRepository.findAll();
+    }
 }
+
