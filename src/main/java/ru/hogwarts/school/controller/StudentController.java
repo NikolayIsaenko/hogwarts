@@ -92,4 +92,56 @@ public class StudentController {
                 .orElse(0.0);
         return ResponseEntity.ok(averageAge);
     }
+
+    @GetMapping("/print-parallel")
+    public void printStudentsParallel() {
+
+        List<Student> allStudents = studentService.findAll();
+
+        if (allStudents.size() < 6) {
+            throw new IllegalArgumentException("Должно быть как минимум 6 студентов для параллельного вывода.");
+        }
+
+        System.out.println(allStudents.get(0).getName());
+        System.out.println(allStudents.get(1).getName());
+
+        new Thread(() -> {
+            System.out.println(allStudents.get(2).getName());
+            System.out.println(allStudents.get(3).getName());
+        }).start();
+
+        new Thread(() -> {
+            System.out.println(allStudents.get(4).getName());
+            System.out.println(allStudents.get(5).getName());
+        }).start();
+    }
+
+    @GetMapping("/print-synchronized")
+    public void printStudentsSynchronized() {
+        List<Student> allStudents = studentService.findAll();
+
+        if (allStudents.size() < 6) {
+            throw new IllegalArgumentException("Должно быть как минимум 6 студентов для синхронного вывода.");
+        }
+
+        // Вывод первых двух имен в основном потоке
+        printSynchronized(allStudents.get(0).getName());
+        printSynchronized(allStudents.get(1).getName());
+
+        // Вывод третьего и четвертого имен в параллельном потоке
+        new Thread(() -> {
+            printSynchronized(allStudents.get(2).getName());
+            printSynchronized(allStudents.get(3).getName());
+        }).start();
+
+        // Вывод пятого и шестого имен в еще одном параллельном потоке
+        new Thread(() -> {
+            printSynchronized(allStudents.get(4).getName());
+            printSynchronized(allStudents.get(5).getName());
+        }).start();
+    }
+
+    private synchronized void printSynchronized(String name) {
+        System.out.println(name);
+    }
 }

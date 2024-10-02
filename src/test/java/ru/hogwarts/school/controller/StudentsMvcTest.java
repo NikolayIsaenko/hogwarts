@@ -220,6 +220,31 @@ public class StudentsMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("21.5"));
     }
+    @Test
+    public void testPrintStudentsParallel() throws Exception {
+        // Arrange
+        List<Student> students = Arrays.asList(
+                createStudent(1L),
+                createStudent(2L),
+                createStudent(3L),
+                createStudent(4L),
+                createStudent(5L),
+                createStudent(6L)
+        );
+
+        when(studentService.findAll()).thenReturn(students);
+
+        // Act & Assert
+        mockMvc.perform(get("/students/print-parallel"))
+                .andExpect(status().isOk());
+    }
+
+
+    @Test
+    public void testPrintStudentsSynchronized() throws Exception {
+        mockMvc.perform(get("/students/print-synchronized"))
+                .andExpect(status().isOk());
+    }
 }
 
 
