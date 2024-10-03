@@ -26,4 +26,8 @@ public interface StudentService {
     Double getAverageAgeOfStudents();
     long countAllStudents();
 
+    public void printStudentsParallel();
+
+    public void printStudentsSynchronized();
+
 }

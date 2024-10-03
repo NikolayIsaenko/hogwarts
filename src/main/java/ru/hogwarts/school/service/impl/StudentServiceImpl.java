@@ -94,4 +94,52 @@ public class StudentServiceImpl implements StudentService {
         logger.info("Метод, для получения всех студентов");
         return studentRepository.countAllStudents();
     }
+
+    @Override
+    public void printStudentsParallel() {
+        List<Student> allStudents = findAll();
+
+        if (allStudents.size() < 6) {
+            throw new IllegalArgumentException("Должно быть как минимум 6 студентов для параллельного вывода.");
+        }
+
+        System.out.println(allStudents.get(0).getName());
+        System.out.println(allStudents.get(1).getName());
+
+        new Thread(() -> {
+            System.out.println(allStudents.get(2).getName());
+            System.out.println(allStudents.get(3).getName());
+        }).start();
+
+        new Thread(() -> {
+            System.out.println(allStudents.get(4).getName());
+            System.out.println(allStudents.get(5).getName());
+        }).start();
+    }
+
+    @Override
+    public void printStudentsSynchronized() {
+        List<Student> allStudents = findAll();
+
+        if (allStudents.size() < 6) {
+            throw new IllegalArgumentException("Должно быть как минимум 6 студентов для синхронного вывода.");
+        }
+
+        printSynchronized(allStudents.get(0).getName());
+        printSynchronized(allStudents.get(1).getName());
+
+        new Thread(() -> {
+            printSynchronized(allStudents.get(2).getName());
+            printSynchronized(allStudents.get(3).getName());
+        }).start();
+
+        new Thread(() -> {
+            printSynchronized(allStudents.get(4).getName());
+            printSynchronized(allStudents.get(5).getName());
+        }).start();
+    }
+
+    private synchronized void printSynchronized(String name) {
+        System.out.println(name);
+    }
 }
