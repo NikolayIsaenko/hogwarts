@@ -1,10 +1,12 @@
 package ru.hogwarts.school.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.FacultyService;
 
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -38,7 +40,7 @@ public class FacultyController {
     }
 
     @GetMapping
-    public List<Faculty> filterByAge(@RequestParam String color) {
+    public List<Faculty> filterByColor(@RequestParam String color) {
         return facultyService.filterByColor(color);
     }
 
@@ -46,8 +48,19 @@ public class FacultyController {
     public List<Faculty> findByColorOrNameIgnoreCase(String name, String color) {
         return facultyService.findByColorOrNameIgnoreCase(name, color);
     }
+
     @GetMapping("{id}/students")
     public List<Student> getStudents(@PathVariable Long id) {
         return facultyService.getStudents(id);
+    }
+
+    @GetMapping("/longestName")
+    public ResponseEntity<String> getLongestFacultyName() {
+        List<Faculty> allFaculties = facultyService.findAll();
+        String longestName = allFaculties.stream()
+                .map(Faculty::getName)
+                .max(Comparator.comparingInt(String::length))
+                .orElse("");
+        return ResponseEntity.ok(longestName);
     }
 }
